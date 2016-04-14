@@ -22,7 +22,6 @@
 #encrypt message
 #decrypt message
 
-import os
 
 #Returns True or False if number is prime or not prime
 def isprime(x):
@@ -53,7 +52,7 @@ def PublicKeyGen(Prime1, Prime2, Prime3,):
     n = Prime1 * Prime2
     z = ((Prime1 - 1) * (Prime2))
     while True:
-        k = os.urandom(8)
+        k = random.randint(300000 * z, 1000000 * z)
         if k % z == 0:
             break
     return z, k
