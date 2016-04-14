@@ -49,15 +49,19 @@ def isprime(x):
 """it has a list of large primes already"""
 
 
-def PublicKeyGen(Prime1, Prime2, Prime3,):
-    n = Prime1 * Prime2
-    z = ((Prime1 - 1) * (Prime2))
-    while True:
-        k = os.urandom(8)
-        if k % z == 0:
-            break
-    return z, k
-
+def PublicKeyGen(Prime1, Prime2):
+    PossibleKeys = []
+    PubKeyA = Prime1 * Prime2
+    PrivMod = ((Prime1 - 1) * (Prime2 - 1))
+    for i in xrange(3,PrivMod,1):
+        if isprime(i) == True && #PrivMod is coprime with i PrivMod % i != 0:
+            PossibleKeys.append(i)
+    KeyListLen = PossibleKeys.len
+    KeySeed = bin(KeyListLen)
+    
+    PubKeyB = PossibleKeys[(int(os.urandom(bin(PossibleKeys.len)))% PossibleKeys.len)]
+    
+    return PubKeyA, PubKeyB, PrivMod
 
 #this magic return the Greatest common denominator
 #I don't remember how
