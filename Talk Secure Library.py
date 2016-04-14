@@ -36,32 +36,6 @@ def isprime(x):
         if x % i == 0:
             return False
     return True
-"""Generate two large primes"""
-""" Prime1 and Prime2"""
-
-"""n = Prime1 * Prime2"""
-"""z = ((Prime1 - 1) * (Prime2 - 1))"""
-"""Generate Prime3"""
-"""generate a number k that is larger than Prime3 and coprime with Prime3"""
-"""The server's public key is n, k"""
-
-"""This is the server side library"""
-"""it has a list of large primes already"""
-
-
-def PublicKeyGen(Prime1, Prime2):
-    PossibleKeys = []
-    PubKeyA = Prime1 * Prime2
-    PrivMod = ((Prime1 - 1) * (Prime2 - 1))
-    for i in xrange(3,PrivMod,1):
-        if isprime(i) == True && #PrivMod is coprime with i PrivMod % i != 0:
-            PossibleKeys.append(i)
-    KeyListLen = PossibleKeys.len
-    KeySeed = bin(KeyListLen)
-    
-    PubKeyB = PossibleKeys[(int(os.urandom(bin(PossibleKeys.len)))% PossibleKeys.len)]
-    
-    return PubKeyA, PubKeyB, PrivMod
 
 #this magic return the Greatest common denominator
 #I don't remember how
@@ -97,14 +71,6 @@ def modinverse(a, b):
         old_t, t = t, old_t - quotient * t
     return old_s
 
-#The authority returns the inverse of e such that it is co prime with p and q?4
-def authority(P, Q, E):
-    if gcd(E, ((P-1) * (Q-1))) != 1:
-        return -1
-    for einverse in xrange(2, ((P-1) * (Q-1)), 1):
-        if (E * einverse) % ((P-1) * (Q-1)) == 1:
-            return einverse
-    return -1
 
 #the modular exponent returns modular exponent
 def modexp(Base, Exponent, Modulus):
@@ -117,9 +83,29 @@ def modexp(Base, Exponent, Modulus):
     return c
 
 
-def openrsa(M, E, PQ):
-    if m > PQ:
-        return -1
-    c = modexp(M, E, PQ)
-    return c
 
+"""Generate two large primes"""
+""" Prime1 and Prime2"""
+
+"""n = Prime1 * Prime2"""
+"""z = ((Prime1 - 1) * (Prime2 - 1))"""
+"""Generate Prime3"""
+"""generate a number k that is larger than Prime3 and coprime with Prime3"""
+"""The server's public key is n, k"""
+
+"""This is the server side library"""
+"""it has a list of large primes already"""
+
+def PublicKeyGen(Prime1, Prime2):
+    PossibleKeys = []
+    PubKeyA = Prime1 * Prime2
+    PrivMod = ((Prime1 - 1) * (Prime2 - 1))
+    for i in xrange(3,PrivMod,1):
+        if isprime(i) == True && gcd(i, PrivMod) == 1:
+            PossibleKeys.append(i)
+    KeyListLen = PossibleKeys.len
+    KeySeed = bin(KeyListLen)
+    KeyIndex = int(os.urandom(KeySeed)) % KeyListLen
+    PubKeyB = PossibleKeys[KeyIndex]
+    
+    return PubKeyA, PubKeyB, PrivMod
