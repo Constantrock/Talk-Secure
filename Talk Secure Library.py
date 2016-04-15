@@ -22,7 +22,7 @@
 #encrypt message
 #decrypt message
 
-import os
+import random
 
 #Returns True or False if number is prime or not prime
 def isprime(x):
@@ -78,7 +78,8 @@ def modexp(Base, Exponent, Modulus):
         return 0
     c = 1
     #this method is faster although it takes more operations
-    for i in xrange(1, Exponent+1, 1):
+    #exponentiate then modulate repeatedly
+    for i in xrange(0, Exponent+1, 1):
         c = (c * base) % Modulus
     return c
 
@@ -96,16 +97,39 @@ def modexp(Base, Exponent, Modulus):
 """This is the server side library"""
 """it has a list of large primes already"""
 
-def PublicKeyGen(Prime1, Prime2):
+def KeyGen(Prime1, Prime2, KeyChainNum):
     PossibleKeys = []
-    PubKeyA = Prime1 * Prime2
-    PrivMod = ((Prime1 - 1) * (Prime2 - 1))
+    #I hope that dynamic typing will keep this from overflowing
+    ModN = Prime1 * Prime2 #pq
+    PrivKey = ((Prime1 - 1) * (Prime2 - 1)) #m
     for i in xrange(3,PrivMod,1):
-        if isprime(i) == True && gcd(i, PrivMod) == 1:
+        if isprime(i) == True and gcd(i, PrivKeyA) == 1:
             PossibleKeys.append(i)
-    KeyListLen = PossibleKeys.len
-    KeySeed = bin(KeyListLen)
-    KeyIndex = int(os.urandom(KeySeed)) % KeyListLen
-    PubKeyB = PossibleKeys[KeyIndex]
+    PubKeyExp=PossibleKeys[random.SystemRandom().randrange(len(PossibleKeys))]#e
+    PrivKeyExp = ModInverse(e, ModN) #d
+    #Time to make sure no errors ocured
+    if gcd(PubKeyExp, PrivKey) != 1:
+        return -1
+    if PubKeyExp <= 1 or PubKeyExp >= PrivKey:
+        return -1
+    if (PrivKeyExp * PubKeyExp) % PrivKey != 1:
+        return -1
     
-    return PubKeyA, PubKeyB, PrivMod
+    KeyChainNum = [ModN, PubKeyExp, PrivKeyExp]
+    
+    return KeyChainNum
+
+
+
+#Encryption is just modular exponentiation Message to the power of PubKeyExp
+#Mod ModN
+
+def encryptor(KeyChainNum, Message):
+    EncryptedMessage = modexp(Message, KeyChainNum[1], KeyChainNum[0])
+    return EncryptedMessage
+
+#decryption is just as simple
+
+def Decryptor(EncryptedMessage, KeyChainNum[2], KeyChainNum[0]):
+    DecryptedMessage = modexp(EncryptedMessage, PrivKeyExp, ModN)
+    return DecryptedMessage
