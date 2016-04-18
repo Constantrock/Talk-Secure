@@ -57,7 +57,7 @@ def gcd(a, b):
 
 # modular inverse returns s instead of r
 #the modular inverse is the number k so that J * k  = 1 mod(n)
-def modinverse(a, b):
+def ModInverse(a, b):
     s = 0
     old_s = 1
     r = b
@@ -71,7 +71,20 @@ def modinverse(a, b):
         old_t, t = t, old_t - quotient * t
     return old_s
 
+def egcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = egcd(b % a, a)
+        return (g, x - (b // a) * y, y)
 
+def modinv(a, m):
+    gcd, x, y = egcd(a, m)
+    if gcd != 1:
+        return None  # modular inverse does not exist
+    else:
+        return x % m
+    
 #the modular exponent returns modular exponent
 def modexp(Base, Exponent, Modulus):
     if Modulus == 1:
@@ -79,57 +92,60 @@ def modexp(Base, Exponent, Modulus):
     c = 1
     #this method is faster although it takes more operations
     #exponentiate then modulate repeatedly
-    for i in xrange(0, Exponent+1, 1):
-        c = (c * base) % Modulus
+    for i in xrange(0, Exponent, 1):
+        c = (c * Base) % Modulus
     return c
-
-
 
 """Generate two large primes"""
 """ Prime1 and Prime2"""
 
 """n = Prime1 * Prime2"""
 """z = ((Prime1 - 1) * (Prime2 - 1))"""
-"""Generate Prime3"""
-"""generate a number k that is larger than Prime3 and coprime with Prime3"""
+
+"""generate a number k that is larger than z and coprime with """
 """The server's public key is n, k"""
 
 """This is the server side library"""
 """it has a list of large primes already"""
 
-def KeyGen(Prime1, Prime2, KeyChainNum):
+def KeyGen(Prime1, Prime2):
     PossibleKeys = []
     #I hope that dynamic typing will keep this from overflowing
     ModN = Prime1 * Prime2 #pq
-    PrivKey = ((Prime1 - 1) * (Prime2 - 1)) #m
-    for i in xrange(3,PrivMod,1):
-        if isprime(i) == True and gcd(i, PrivKeyA) == 1:
+    PhiOfN = ((Prime1 - 1) * (Prime2 - 1)) #m or z
+    #finding PubKey or K or e
+    for i in xrange(3, PhiOfN ,1):
+        if isprime(i) == True and gcd(i, PhiOfN) == 1:
             PossibleKeys.append(i)
     PubKeyExp=PossibleKeys[random.SystemRandom().randrange(len(PossibleKeys))]#e
-    PrivKeyExp = ModInverse(e, ModN) #d
+    #We have the public keys now
+    #find PrivKeyExp
+    PrivKeyExp = ModInverse(PubKeyExp, PhiOfN) #d or j
+    if PrivKeyExp <0:
+        PrivKeyExp = PrivKeyExp + PhiOfN
     #Time to make sure no errors ocured
-    if gcd(PubKeyExp, PrivKey) != 1:
-        return -1
-    if PubKeyExp <= 1 or PubKeyExp >= PrivKey:
-        return -1
-    if (PrivKeyExp * PubKeyExp) % PrivKey != 1:
-        return -1
+    if gcd(PubKeyExp, PhiOfN) != 1:
+        return -1, "a"
+    if PubKeyExp <= 1 or PubKeyExp >= PhiOfN:
+        return -1, "b"
+    if (PrivKeyExp * PubKeyExp) % PhiOfN != 1:
+        return -1, "c"
     
-    KeyChainNum = [ModN, PubKeyExp, PrivKeyExp]
+    KeyChain = [ModN, PubKeyExp, PrivKeyExp]
     
-    return KeyChainNum
+    return KeyChain
 
 
 
 #Encryption is just modular exponentiation Message to the power of PubKeyExp
 #Mod ModN
 
-def encryptor(KeyChainNum, Message):
-    EncryptedMessage = modexp(Message, KeyChainNum[1], KeyChainNum[0])
+def Encryptor(Message, KeyChain):
+    EncryptedMessage = modexp(Message, KeyChain[1], KeyChain[0])
     return EncryptedMessage
 
 #decryption is just as simple
 
-def Decryptor(EncryptedMessage, KeyChainNum[2], KeyChainNum[0]):
-    DecryptedMessage = modexp(EncryptedMessage, PrivKeyExp, ModN)
+def Decryptor(EncryptedMessage, KeyChain):
+    DecryptedMessage = modexp(EncryptedMessage, KeyChain[2], KeyChain[0])
     return DecryptedMessage
