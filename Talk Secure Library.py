@@ -37,47 +37,15 @@ def isprime(x):
             return False
     return True
 
-#this magic return the Greatest common denominator
-#I don't remember how
-#I hope it isn't important
-def gcd(a, b):
-    s = 0
-    old_s = 1
-    r = b
-    old_r = a
-    t = 1
-    old_t = 0
-    while r != 0:
-        quotient = old_r / r
-        old_r, r = r, old_r - quotient * r
-        old_s, s = s, old_s - quotient * s
-        old_t, t = t, old_t - quotient * t
-    return old_r
-
-
-# modular inverse returns s instead of r
-#the modular inverse is the number k so that J * k  = 1 mod(n)
-def ModInverse(a, b):
-    s = 0
-    old_s = 1
-    r = b
-    old_r = a
-    t = 1
-    old_t = 0
-    while r != 0:
-        quotient = old_r / r
-        old_r, r = r, old_r - quotient * r
-        old_s, s = s, old_s - quotient * s
-        old_t, t = t, old_t - quotient * t
-    return old_s
-
+#returns GCD for modular inverse
 def egcd(a, b):
     if a == 0:
         return (b, 0, 1)
     else:
         g, y, x = egcd(b % a, a)
         return (g, x - (b // a) * y, y)
-
+    
+#returns k when a * k mod(m) = 1
 def modinv(a, m):
     gcd, x, y = egcd(a, m)
     if gcd != 1:
@@ -85,7 +53,7 @@ def modinv(a, m):
     else:
         return x % m
     
-#the modular exponent returns modular exponent
+#the modular exponent returns b ^ e mod (m)
 def modexp(Base, Exponent, Modulus):
     if Modulus == 1:
         return 0
@@ -149,3 +117,11 @@ def Encryptor(Message, KeyChain):
 def Decryptor(EncryptedMessage, KeyChain):
     DecryptedMessage = modexp(EncryptedMessage, KeyChain[2], KeyChain[0])
     return DecryptedMessage
+
+#the following is how to encrypt and decrypt a message
+
+#key = KeyGen(Prime1, Prime2)
+
+#EncryptedMessage = Encryptor(Number, key)
+
+#DecryptedMessage = Decryptor(EncryptedMessage, Key)
