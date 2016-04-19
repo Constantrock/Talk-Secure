@@ -146,12 +146,3 @@ def Encryptor(Message, KeyChain):
 def Decryptor(EncryptedMessage, KeyChain):
     DecryptedMessage = modexp(EncryptedMessage, KeyChain[2], KeyChain[0])
     return DecryptedMessage
-
-Key = KeyGen(997, 991)
-
-message = 300
-
-c = Encryptor(message, Key)
-print c
-
-print Decryptor(c, Key)
