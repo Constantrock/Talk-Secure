@@ -1,16 +1,5 @@
-#I am writing a program for the purpose of encrypting communication
-#between two computers
-
-#I wrote this code over the summer
-#being young and dumb none of this was commented
-#I have forgotten how much of this math works
-#the variable names don't describe what they are
-#I do, however, have access to explanations of the process
-#I will be rewriting this shortly
-
 #http://sergematovic.tripod.com/rsa1.html
 
-#the next step is tow rewrite this with comments
 #it will serve as the foundation of the encryption
 #then I will write the server side code for finding other computers
 #then I will write the client side code for the actual communication
@@ -36,6 +25,34 @@ def isprime(x):
         if x % i == 0:
             return False
     return True
+
+def gcd(a, b):
+    s = 0
+    old_s = 1
+    r = b
+    old_r = a
+    t = 1
+    old_t = 0
+    while r != 0:
+        quotient = old_r / r
+        old_r, r = r, old_r - quotient * r
+        old_s, s = s, old_s - quotient * s
+        old_t, t = t, old_t - quotient * t
+    return old_r
+
+def ModInverse(a, b):
+    s = 0
+    old_s = 1
+    r = b
+    old_r = a
+    t = 1
+    old_t = 0
+    while r != 0:
+        quotient = old_r / r
+        old_r, r = r, old_r - quotient * r
+        old_s, s = s, old_s - quotient * s
+        old_t, t = t, old_t - quotient * t
+    return old_s
 
 #returns GCD for modular inverse
 def egcd(a, b):
@@ -64,6 +81,22 @@ def modexp(Base, Exponent, Modulus):
         c = (c * Base) % Modulus
     return c
 
+def PubKeyExpFind(PhiOfN):
+    PossibleKeys = []
+    sect = random.SystemRandom().randrange(1, 254,1)
+    while True:
+        for i in xrange((PhiOfN * sect // 256),(PhiOfN * (sect + 1) // 256), 1):
+             if isprime(i) == True and gcd(i, PhiOfN) == 1:
+                  PossibleKeys.append(i)
+        if len(PossibleKeys) >= 3:
+            break
+        else:
+            sect = random.SystemRandom().randrange(1, 254,1)
+
+    PubKeyExp = PossibleKeys[random.SystemRandom().randrange(len(PossibleKeys))]
+    
+    return PubKeyExp
+        
 """Generate two large primes"""
 """ Prime1 and Prime2"""
 
@@ -82,10 +115,7 @@ def KeyGen(Prime1, Prime2):
     ModN = Prime1 * Prime2 #pq
     PhiOfN = ((Prime1 - 1) * (Prime2 - 1)) #m or z
     #finding PubKey or K or e
-    for i in xrange(3, PhiOfN ,1):
-        if isprime(i) == True and gcd(i, PhiOfN) == 1:
-            PossibleKeys.append(i)
-    PubKeyExp=PossibleKeys[random.SystemRandom().randrange(len(PossibleKeys))]#e
+    PubKeyExp = PubKeyExpFind(PhiOfN)
     #We have the public keys now
     #find PrivKeyExp
     PrivKeyExp = ModInverse(PubKeyExp, PhiOfN) #d or j
@@ -107,7 +137,6 @@ def KeyGen(Prime1, Prime2):
 
 #Encryption is just modular exponentiation Message to the power of PubKeyExp
 #Mod ModN
-
 def Encryptor(Message, KeyChain):
     EncryptedMessage = modexp(Message, KeyChain[1], KeyChain[0])
     return EncryptedMessage
@@ -118,10 +147,11 @@ def Decryptor(EncryptedMessage, KeyChain):
     DecryptedMessage = modexp(EncryptedMessage, KeyChain[2], KeyChain[0])
     return DecryptedMessage
 
-#the following is how to encrypt and decrypt a message
+Key = KeyGen(997, 991)
 
-#key = KeyGen(Prime1, Prime2)
+message = 300
 
-#EncryptedMessage = Encryptor(Number, key)
+c = Encryptor(message, Key)
+print c
 
-#DecryptedMessage = Decryptor(EncryptedMessage, Key)
+print Decryptor(c, Key)
