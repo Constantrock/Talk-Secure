@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
+#include <time.h>
 // begin definitions
 
 //rounding is useful for getting the integr of the square root
@@ -46,51 +47,54 @@ long isprime(long x){
     }
     return 1;
 }
+
 // greatet common denominator of a and b
 // if the GCD is 1 then they are coprime
 // they have no factors
-int 
-gcd ( int a, int b )
-{
-  int c;
+int gcd(long a, long b ){
+  long c;
   while ( a != 0 ) {
      c = a; a = b%a;  b = c;
   }
   return b;
 }
 
+//function for extended Euclidean Algorithm
+int gcdExtended(int a, int b, int *x, int *y){
+    // Base Case
+    if (a == 0)
+    {
+        *x = 0, *y = 1;
+        return b;
+    }
+ 
+    int x1, y1; // To store results of recursive call
+    int gcd = gcdExtended(b%a, a, &x1, &y1);
+ 
+    // Update x and y using results of recursive
+    // call
+    *x = y1 - (b/a) * x1;
+    *y = x1;
+ 
+    return gcd;
+}
+ 
 //modular inverse works like GCD, but returns different value
-long ModInverse(int a, int b){
-  int s = 0;
-  int old_s = 1;
-  long r = b;
-  long old_r = a;
-  int t = 1;
-  int old_t = 0;
-  long quotient = (old_r / r);
-  long temp1;
-  long temp2;
-  
-  while (r!=0){
-    quotient = old_r / r;
-    temp1 = r;
-    temp2 = old_r;
-    old_r = temp1;
-    r = temp2 - (quotient * temp1);
-    temp1 = s;
-    temp2 = old_s;
-    old_s = temp1;
-    s = old_s - (quotient * temp1);
-    temp1 = t;
-    temp2 = old_t;
-    old_t = temp1;
-    t = temp2 - (quotient * temp1);
-  }
-  //here it return s
-  return old_s;
+long ModInverse(long a, long m){
+    int x, y;
+    long g = gcdExtended(a, m, &x, &y);
+    if (g != 1)
+      printf( "Inverse doesn't exist\n");
+    else{
+        // m is added to handle negative x
+        long res = (x%m + m) % m;
+	return res;
+    }
+    return -1;
 }
 
-// iterating method is still faster than using large values
+
+  // iterating method is still faster than using large values
 long modexp( int base, long exponent, long modulus){
   if (modulus == 1){
     return 0;
@@ -106,17 +110,24 @@ long modexp( int base, long exponent, long modulus){
 
 //here comes the magic
 long privkeyexp(phiofn){
+  srand(time(NULL));
+  int r= rand();
   // a function x -> pos where 0 < x < 1 and where 1 < pos < phi of n
-  float num = .234567; //random number
+  float num = (float)r/(float)(RAND_MAX/1); //random 0 < x < 1
   long possible_priv_key = (rounder(num * phiofn));
   // until priv_key_exp = something repeat this process
   long priv_key_exp = 1;
   while (priv_key_exp == 1){
     // if pos is prime and coprime with phiofn then it is a suitable key
-    if((isprime(possible_priv_key)==1) && (gcd(possible_priv_key, phiofn)==1)){
-      priv_key_exp = possible_priv_key;
+    if(isprime(possible_priv_key)==1){
+      if((gcd(possible_priv_key, phiofn)==1)){
+	priv_key_exp = possible_priv_key;
+      }
     }
     // add one and then make sure it will be smaller than
+    if((possible_priv_key % (phiofn - 1)) == 0){
+      possible_priv_key =  (possible_priv_key + 2) % phiofn;
+    }
     possible_priv_key = (possible_priv_key + 1) % phiofn;
   }
   return priv_key_exp;
@@ -125,10 +136,10 @@ long privkeyexp(phiofn){
 
 long primereturn(seed){
   if(seed == 1){
-    return 7;
+    return 6353;
   }
   if(seed == 2){
-    return 29;
+    return 6827;
   }
   return -1;
 }
@@ -146,7 +157,7 @@ int main(){
   //calculate the random key we will use
   long privatekey = privkeyexp(phiofn);
   //now take the inverse of the public key
-  long publickey = ModInverse(publickey, phiofn);
+  long publickey = ModInverse(privatekey, phiofn);
   //this concludes the calculations
   //time to store
   printf("%ld\n%ld\n%ld\n", privatekey, publickey, modn);
